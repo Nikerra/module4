@@ -21,50 +21,11 @@ import java.util.*;
  */
 public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
 
-    private CustomTreeMapImpl.Entry<K, V> root;
+    private transient Entry<K, V> root;
     private final Comparator<K> comparator;
-    private int size;
-    private int modCount;
-
-
-    static final class Entry<K, V> {
-        K key;
-        V value;
-
-        @Override
-        public String toString() {
-            return "{"+ key + "=" + value + '}';
-        }
-
-        CustomTreeMapImpl.Entry<K, V> left;
-        CustomTreeMapImpl.Entry<K, V> right;
-        CustomTreeMapImpl.Entry<K, V> parent;
-
-        Entry(K key, V value, CustomTreeMapImpl.Entry<K, V> parent) {
-            this.key = key;
-            this.value = value;
-            this.parent = parent;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Entry<?, ?> entry = (Entry<?, ?>) o;
-            return Objects.equals(key, entry.key);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(key);
-        }
-
-        public V setValue(V value) {
-            V oldValue = this.value;
-            this.value = value;
-            return oldValue;
-        }
-    }
+    private transient int size = 0;
+    private transient int modCount = 0;
+    private transient EntrySet entrySet;
 
     public CustomTreeMapImpl(Comparator<K> comparator) {
         this.comparator = comparator;
@@ -168,6 +129,165 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
     /**
      * SUPPORT METHOD
      */
+
+    static final class Entry<K,V> implements Map.Entry<K,V> {
+        K key;
+        V value;
+        Entry<K,V> left;
+        Entry<K,V> right;
+        Entry<K,V> parent;
+
+        /**
+         * Make a new cell with given key, value, and parent, and with
+         * {@code null} child links, and BLACK color.
+         */
+        Entry(K key, V value, Entry<K,V> parent) {
+            this.key = key;
+            this.value = value;
+            this.parent = parent;
+        }
+
+        /**
+         * Returns the key.
+         *
+         * @return the key
+         */
+        public K getKey() {
+            return key;
+        }
+
+        /**
+         * Returns the value associated with the key.
+         *
+         * @return the value associated with the key
+         */
+        public V getValue() {
+            return value;
+        }
+
+        /**
+         * Replaces the value currently associated with the key with the given
+         * value.
+         *
+         * @return the value associated with the key before this method was
+         *         called
+         */
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Entry<?, ?> entry = (Entry<?, ?>) o;
+            return Objects.equals(key, entry.key) && Objects.equals(value, entry.value);
+        }
+
+        public int hashCode() {
+            int keyHash = (key==null ? 0 : key.hashCode());
+            int valueHash = (value==null ? 0 : value.hashCode());
+            return keyHash ^ valueHash;
+        }
+
+        public String toString() {
+            return key + "=" + value;
+        }
+    }
+
+    class EntrySet extends AbstractSet<Map.Entry<K,V>> {
+        public Iterator<Map.Entry<K,V>> iterator() {
+            return new EntryIterator(getFirstEntry());
+        }
+
+        public boolean contains(Object o) {
+            if (!(o instanceof Map.Entry<?, ?> entry))
+                return false;
+            Object value = entry.getValue();
+            Entry<K,V> p = getEntry(entry.getKey());
+            return p != null && valEquals(p.getValue(), value);
+        }
+
+        public boolean remove(Object o) {
+            if (!(o instanceof Map.Entry<?, ?> entry))
+                return false;
+            Object value = entry.getValue();
+            Entry<K,V> p = getEntry(entry.getKey());
+            if (p != null && valEquals(p.getValue(), value)) {
+                deleteEntry(p);
+                return true;
+            }
+            return false;
+        }
+        public int size() {
+            return this.size();
+        }
+        public void clear() {
+            this.clear();
+        }
+    }
+
+    abstract class PrivateEntryIterator<T> implements Iterator<T> {
+        Entry<K,V> next;
+        Entry<K,V> lastReturned;
+        int expectedModCount;
+
+        PrivateEntryIterator(Entry<K,V> first) {
+            expectedModCount = modCount;
+            lastReturned = null;
+            next = first;
+        }
+
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final Entry<K,V> nextEntry() {
+            Entry<K,V> e = next;
+            if (e == null)
+                throw new NoSuchElementException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            next = successor(e);
+            lastReturned = e;
+            return e;
+        }
+    }
+
+    final class EntryIterator extends PrivateEntryIterator<Map.Entry<K,V>> {
+        EntryIterator(Entry<K,V> first) {
+            super(first);
+        }
+        public Map.Entry<K,V> next() {
+            return nextEntry();
+        }
+    }
+    public String toString() {
+        Iterator<Map.Entry<K,V>> i = entrySet().iterator();
+        if (! i.hasNext())
+            return "{}";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append('{');
+        for (;;) {
+            Map.Entry<K,V> e = i.next();
+            K key = e.getKey();
+            V value = e.getValue();
+            sb.append(key   == this ? "(this Map)" : key);
+            sb.append('=');
+            sb.append(value == this ? "(this Map)" : value);
+            if (! i.hasNext())
+                return sb.append('}').toString();
+            sb.append(',').append(' ');
+        }
+    }
+
+    public Set<Map.Entry<K,V>> entrySet() {
+        EntrySet es = entrySet;
+        return (es != null) ? es : (entrySet = new EntrySet());
+    }
 
     private Entry<K,V> getEntry(Object key) {
         if (comparator != null)
@@ -331,7 +451,6 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
             return p;
         }
     }
-
     private boolean valEquals(Object o1, Object o2) {
         return (o1==null ? o2==null : o1.equals(o2));
     }

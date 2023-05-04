@@ -10,7 +10,7 @@ public class Main {
         Comparator<Integer> comparator = new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
-                return o1.compareTo(o2);
+                return o2.compareTo(o1);
             }
         };
         CustomTreeMapImpl<Integer, String> customTreeMap = new CustomTreeMapImpl<>(comparator);
@@ -20,7 +20,7 @@ public class Main {
         customTreeMap.put(19, "Value1");
         System.out.println("customTreeMap.isEmpty()=" + customTreeMap.isEmpty());
         System.out.println("size=" + customTreeMap.size());
-        System.out.println("customTreeMap=" + customTreeMap);
+        System.out.println("toString()=" + customTreeMap);
         System.out.println("customTreeMapKey=" + customTreeMap.keys());
         System.out.println("customTreeMapValues=" + customTreeMap.values());
         }
