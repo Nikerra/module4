@@ -19,6 +19,7 @@ public class Main {
         customTreeMap.put(15, "Value1");
         customTreeMap.put(19, "Value1");
         System.out.println("customTreeMap.isEmpty()=" + customTreeMap.isEmpty());
+        System.out.println("size=" + customTreeMap.size());
         System.out.println("customTreeMap=" + customTreeMap);
         System.out.println("customTreeMapKey=" + customTreeMap.keys());
         System.out.println("customTreeMapValues=" + customTreeMap.values());
