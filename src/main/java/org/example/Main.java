@@ -1,6 +1,5 @@
 package org.example;
 
-import java.util.Arrays;
 import java.util.Comparator;
 
 public class Main {
@@ -20,7 +19,10 @@ public class Main {
         System.out.println("customTreeMap.isEmpty()=" + customTreeMap.isEmpty());
         System.out.println("size=" + customTreeMap.size());
         System.out.println("toString()=" + customTreeMap);
-        System.out.println("key=" + Arrays.toString(customTreeMap.keys()));
-        System.out.println("value=" + Arrays.toString(customTreeMap.values()));
+        customTreeMap.toString();
+        System.out.println("key=" + customTreeMap.toString(customTreeMap.keys()));
+        System.out.println("value=" + customTreeMap.toString(customTreeMap.values()));
+        System.out.println("delete=" + customTreeMap.remove(15));
+        System.out.println("toString()=" + customTreeMap);
     }
 }
