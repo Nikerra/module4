@@ -28,7 +28,9 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
     private  int modCount = 0;
     private  EntrySet entrySet;
 
-    public CustomTreeMapImpl(Comparator<K> comparator) {this.comparator = comparator;}
+    public CustomTreeMapImpl(Comparator<K> comparator) {
+        this.comparator = comparator;
+    }
 
     /**
      *  Get ize of map.
@@ -36,7 +38,9 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
      * @return - size of map
      */
     @Override
-    public int size() {return size;}
+    public int size() {
+        return size;
+    }
 
     /**
      * Check map is empty.
@@ -44,7 +48,9 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
      * @return - boolean value
      */
     @Override
-    public boolean isEmpty() {return size == 0;}
+    public boolean isEmpty() {
+        return size == 0;
+    }
 
     /**
      * Get item by key.
@@ -53,8 +59,8 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
      */
     @Override
     public V get(Object key) {
-        Entry<K,V> parent = getEntry(key);
-        return (parent==null ? null : parent.value);
+        Entry<K,V> entry = getEntry(key);
+        return (entry == null ? null : entry.value);
     }
 
     /**
@@ -64,50 +70,45 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
      */
     @Override
     public V put(K key, V value) {
-        boolean replaceOld = true;
         Entry<K,V> tempRoot = root;
         if (tempRoot == null) {
             addEntryToEmptyMap(key, value);
             return null;
         }
         int cmpValue;
-        Entry<K,V> parent;
-        Comparator<? super K> tempComparator = comparator;
-        if (tempComparator != null) {
+        Entry<K,V> entry;
+        Comparator<? super K> cpr = comparator;
+        if (cpr != null) {
             do {
-                parent = tempRoot;
-                cmpValue = tempComparator.compare(key, tempRoot.key);
+                entry = tempRoot;
+                cmpValue = cpr.compare(key, tempRoot.key);
                 if (cmpValue < 0)
                     tempRoot = tempRoot.left;
                 else if (cmpValue > 0)
                     tempRoot = tempRoot.right;
                 else {
                     V oldValue = tempRoot.value;
-                    if (replaceOld || oldValue == null) {
-                        tempRoot.value = value;
-                    }
+                    tempRoot.value = value;
                     return oldValue;
                 }
             } while (tempRoot != null);
         } else {
-            Comparable<? super K> tempKey = (Comparable<? super K>) key;
+            Comparable<? super K> k = (Comparable<? super K>) key;
             do {
-                parent = tempRoot;
-                cmpValue = tempKey.compareTo(tempRoot.key);
+                entry = tempRoot;
+                cmpValue = k.compareTo(tempRoot.key);
                 if (cmpValue < 0)
                     tempRoot = tempRoot.left;
                 else if (cmpValue > 0)
                     tempRoot = tempRoot.right;
                 else {
                     V oldValue = tempRoot.value;
-                    if (replaceOld || oldValue == null) {
-                        tempRoot.value = value;
-                    }
+                    tempRoot.value = value;
                     return oldValue;
                 }
             } while (tempRoot != null);
         }
-        addEntry(key, value, parent, cmpValue < 0);
+        addEntry(key, value, entry, cmpValue < 0);
         return null;
     }
 
@@ -124,13 +125,14 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
             return null;
         }
         V oldValue = entry.value;
+
         modCount++;
         size--;
         if (entry.left != null && entry.right != null) {
-            Entry<K,V> tempHeir = heir(entry);
-            entry.key = tempHeir.key;
-            entry.value = tempHeir.value;
-            entry = tempHeir;
+            Entry<K,V> heirEntry = heir(entry);
+            entry.key = heirEntry.key;
+            entry.value = heirEntry.value;
+            entry = heirEntry;
         }
         Entry<K,V> replacement = (entry.left != null ? entry.left : entry.right);
 
@@ -159,6 +161,7 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
         return oldValue;
     }
 
+
     /**
      * Checks if item exists by key.
      *
@@ -166,7 +169,9 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
      * @return true or false
      */
     @Override
-    public boolean containsKey(K key) {return getEntry(key) != null;}
+    public boolean containsKey(K key) {
+        return getEntry(key) != null;
+    }
 
     /**
      * Checks if item exists by value.
@@ -177,8 +182,9 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
     @Override
     public boolean containsValue(V value) {
         for (Entry<K,V> entry = getFirstEntry(); entry != null; entry = heir(entry))
-            if (valEquals(value, entry.value))
+            if (valEquals(value, entry.value)) {
                 return true;
+            }
         return false;
     }
 
@@ -195,7 +201,6 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
         for (Map.Entry<K, V> array: entrySet) {
             arrayKey[i++] = array.getKey();
         }
-
         return arrayKey;
     }
 
@@ -258,20 +263,24 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
         }
     }
 
+
+
     private Entry<K,V> getEntry(Object key) {
-        Comparable<? super K> k = (Comparable<? super K>) key;
-        Entry<K,V> parent = root;
-        while (parent != null) {
-            int cmp = k.compareTo(parent.key);
-            if (cmp < 0)
-                parent = parent.left;
-            else if (cmp > 0)
-                parent = parent.right;
-            else
-                return parent;
+        Comparable<? super K> tempKey = (Comparable<? super K>) key;
+        Entry<K,V> parentEntry = root;
+        while (parentEntry != null) {
+            int cmpValue = tempKey.compareTo(parentEntry.key);
+            if (cmpValue < 0) {
+                parentEntry = parentEntry.left;
+            } else if (cmpValue > 0) {
+                parentEntry = parentEntry.right;
+            } else {
+                return parentEntry;
+            }
         }
         return null;
     }
+
     private void addEntry(K key, V value, Entry<K, V> parent, boolean addToLeft) {
         Entry<K,V> entry = new Entry<>(key, value, parent);
         if (addToLeft) {
@@ -291,46 +300,54 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
     }
 
     private int compare(Object key1, Object key2) {
-        return comparator == null ? ((Comparable<? super K>)key1).compareTo((K)key2)
+        return comparator==null ? ((Comparable<? super K>)key1).compareTo((K)key2)
                 : comparator.compare((K)key1, (K)key2);
     }
 
-    private <K,V> Entry<K,V> heir(Entry<K,V> t) {
-        if (t == null)
+    private <K,V> Entry<K,V> heir(Entry<K,V> tempEntry) {
+        if (tempEntry == null)
             return null;
-        else if (t.right != null) {
-            Entry<K,V> p = t.right;
-            while (p.left != null)
-                p = p.left;
-            return p;
+        else if (tempEntry.right != null) {
+            Entry<K,V> parentEntry = tempEntry.right;
+            while (parentEntry.left != null)
+                parentEntry = parentEntry.left;
+            return parentEntry;
         } else {
-            Entry<K,V> p = t.parent;
-            Entry<K,V> ch = t;
-            while (p != null && ch == p.right) {
-                ch = p;
-                p = p.parent;
+            Entry<K,V> parentEntry = tempEntry.parent;
+            Entry<K,V> childEntry = tempEntry;
+            while (parentEntry != null && childEntry == parentEntry.right) {
+                childEntry = parentEntry;
+                parentEntry = parentEntry.parent;
             }
-            return p;
+            return parentEntry;
         }
     }
+
     private boolean valEquals(Object o1, Object o2) {
-        return (o1==null ? o2==null : o1.equals(o2));
+        return (o1 == null ? o2 == null : o1.equals(o2));
     }
+
     private  Entry<K,V> getFirstEntry() {
-        Entry<K,V> entry = root;
-        if (entry != null)
-            while (entry.left != null)
-                entry = entry.left;
-        return entry;
+        Entry<K,V> tempParent = root;
+        if (tempParent != null)
+            while (tempParent.left != null) {
+                tempParent = tempParent.left;
+            }
+        return tempParent;
     }
 
 
     /**
-     * Copy Method Set
+     * Copy SET Method
      */
+
     class EntrySet extends AbstractSet<Map.Entry<K,V>> {
-        public Iterator<Map.Entry<K,V>> iterator() {return new EntryIterator(getFirstEntry());}
-        public int size() {return size;}
+        public Iterator<Map.Entry<K,V>> iterator() {
+            return new EntryIterator(getFirstEntry());
+        }
+        public int size() {
+            return size;
+        }
     }
 
     abstract class PrivateEntryIterator<T> implements Iterator<T> {
@@ -344,7 +361,9 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
             next = first;
         }
 
-        public final boolean hasNext() {return next != null;}
+        public final boolean hasNext() {
+            return next != null;
+        }
 
         final Entry<K,V> nextEntry() {
             Entry<K,V> e = next;
@@ -359,8 +378,12 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
     }
 
     final class EntryIterator extends PrivateEntryIterator<Map.Entry<K,V>> {
-        EntryIterator(Entry<K,V> first) {super(first);}
-        public Map.Entry<K,V> next() {return nextEntry();}
+        EntryIterator(Entry<K,V> first) {
+            super(first);
+        }
+        public Map.Entry<K,V> next() {
+            return nextEntry();
+        }
     }
     public String toString() {
         Iterator<Map.Entry<K,V>> i = entrySet().iterator();
@@ -381,13 +404,15 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
             sb.append(',').append(' ');
         }
     }
-    private Set<Map.Entry<K,V>> entrySet() {
+
+    public Set<Map.Entry<K,V>> entrySet() {
         EntrySet es = entrySet;
         return (es != null) ? es : (entrySet = new EntrySet());
     }
 
+
     /**
-     * Copy Method Arrays
+     * Copt ARRAYS Method
      */
     public static String toString(Object[] a) {
         if (a == null)
@@ -406,4 +431,5 @@ public class CustomTreeMapImpl<K, V> implements CustomTreeMap<K, V> {
             b.append(", ");
         }
     }
+
 }
