@@ -32,6 +32,5 @@ public class Main {
         System.out.println("containsKey=15:" + customTreeMap.containsKey(19));
         System.out.println("containsValue=Value10:" + customTreeMap.containsValue("Value10"));
         System.out.println("containsValue=Value19:" + customTreeMap.containsValue("Value19"));
-
     }
 }
